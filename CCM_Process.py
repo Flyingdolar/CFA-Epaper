@@ -6,6 +6,13 @@ import Color_Space_Change as csc
 import matplotlib.pyplot as plt
 from PIL import Image
 from tqdm import tqdm
+import time
+import math as M
+import numpy as np
+import Functions as f
+import Color_Space_Change as csc
+from PIL import Image
+from tqdm import tqdm
 
 # ----------------------------------- Matrix Result ----------------------------------- #
 CCMList = np.array(
@@ -88,54 +95,57 @@ CCMListReverse = np.array(
 #     print(np.dot(CCMList[idx], CCMListReverse[idx]))
 
 
-# ----------------------------------- Main  Process ----------------------------------- #
-FileName = "Input/Image/161_epaper.png"
-imgsRGB = np.array(Image.open(FileName), dtype=np.float32)
-imgRGB = np.zeros(imgsRGB.shape)
 
-# 1. Reverse Gamma Correction
-print("Reverse Gamma Correction")
-for row in tqdm(range(imgsRGB.shape[0])):
-    for col in range(imgsRGB.shape[1]):
-        imgRGB[row][col] = csc.sRGB_to_linearRGB(imgsRGB[row][col])
+import matplotlib.pyplot as plt
 
-# 2. Apply Color Correction Matrix 0 to all pixels
-imgRGB = np.dot(imgRGB, CCMListReverse[0])
+def apply_color_correction(input_path, output_path):
+    imgsRGB = np.array(Image.open(input_path), dtype=np.float32)
+    imgRGB = np.zeros(imgsRGB.shape)
 
-# 3. Create a corresponding image in the CIEYxy color space
-print("Create a corresponding image in the CIEYxy color space")
-imgYxy = np.zeros(imgRGB.shape)
-for row in tqdm(range(imgRGB.shape[0])):
-    for col in range(imgRGB.shape[1]):
-        imgYxy[row][col] = csc.XYZ_to_Yxy(*csc.RGB_to_XYZ(*imgRGB[row][col]))
+    # 1. Reverse Gamma Correction
+    print("Reverse Gamma Correction")
+    for row in tqdm(range(imgsRGB.shape[0])):
+        for col in range(imgsRGB.shape[1]):
+            imgRGB[row][col] = csc.sRGB_to_linearRGB(imgsRGB[row][col])
 
-# 4. Apply CCM1/CCM2/CCM3 according to which xy color position is closer to the pixel
-print("Apply CCMs according to which xy color position is closer to the pixel")
-for row in tqdm(range(imgRGB.shape[0])):
-    for col in range(imgRGB.shape[1]):
-        xyDist = np.zeros(3)
-        for idx in range(3):
-            xyDist[idx] = M.sqrt(
-                M.pow(imgYxy[row][col][1] - matPos[idx][0], 2)
-                + M.pow(imgYxy[row][col][2] - matPos[idx][1], 2)
-            )
-        minIdx = np.argmin(xyDist) + 1
-        imgRGB[row][col] = np.dot(imgRGB[row][col], CCMListReverse[minIdx])
+    # 2. Apply Color Correction Matrix 0 to all pixels
+    imgRGB = np.dot(imgRGB, CCMListReverse[0])
+
+    # 3. Create a corresponding image in the CIEYxy color space
+    print("Create a corresponding image in the CIEYxy color space")
+    imgYxy = np.zeros(imgRGB.shape)
+    for row in tqdm(range(imgRGB.shape[0])):
+        for col in range(imgRGB.shape[1]):
+            imgYxy[row][col] = csc.XYZ_to_Yxy(*csc.RGB_to_XYZ(*imgRGB[row][col]))
+
+    # 4. Apply CCM1/CCM2/CCM3 according to which xy color position is closer to the pixel
+    print("Apply CCMs according to which xy color position is closer to the pixel")
+    for row in tqdm(range(imgRGB.shape[0])):
+        for col in range(imgRGB.shape[1]):
+            xyDist = np.zeros(3)
+            for idx in range(3):
+                xyDist[idx] = M.sqrt(
+                    M.pow(imgYxy[row][col][1] - matPos[idx][0], 2)
+                    + M.pow(imgYxy[row][col][2] - matPos[idx][1], 2)
+                )
+            minIdx = np.argmin(xyDist) + 1
+            imgRGB[row][col] = np.dot(imgRGB[row][col], CCMListReverse[minIdx])
 
 
-# 5. Convert the image back to the sRGB color space
-print("Convert the image back to the sRGB color space")
-for row in tqdm(range(imgRGB.shape[0])):
-    for col in range(imgRGB.shape[1]):
-        imgsRGB[row][col] = csc.linearRGB_to_sRGB(imgRGB[row][col])
+    # 5. Convert the image back to the sRGB color space
+    print("Convert the image back to the sRGB color space")
+    for row in tqdm(range(imgRGB.shape[0])):
+        for col in range(imgRGB.shape[1]):
+            imgsRGB[row][col] = csc.linearRGB_to_sRGB(imgRGB[row][col])
 
-# 6. Output the image in the sRGB color space
-# Clip the value to [0, 255]
-print("Clip the value to [0, 255]")
-imgsRGB = np.clip(imgsRGB, 0, 255)
-plt.imshow(imgsRGB.astype(np.uint8))
-plt.show()
+    # 6. Output the image in the sRGB color space
+    # Clip the value to [0, 255]
+    print("Clip the value to [0, 255]")
+    imgsRGB = np.clip(imgsRGB, 0, 255)
+    plt.imshow(imgsRGB.astype(np.uint8))
+    plt.show()
 
-# 7. Save the image
-print("Save the image")
-Image.fromarray(imgsRGB.astype(np.uint8)).save("Output/CCM_Process.png")
+    # 7. Save the image
+    print("Save the image")
+    Image.fromarray(imgsRGB.astype(np.uint8)).save(output_path)
+

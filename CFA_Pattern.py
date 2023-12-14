@@ -6,6 +6,14 @@ import pandas as pd
 import Functions as f
 from PIL import Image
 from scipy.signal import convolve2d, correlate2d
+import os
+import time
+import math as m
+import numpy as np
+import pandas as pd
+import Functions as f
+from PIL import Image
+from scipy.signal import convolve2d, correlate2d
 
 
 def ToggleB(gm, Cpp, Cpe, hCpp, i, j, convergence):
@@ -366,41 +374,40 @@ def RTBDBS_CFA(fm, gm, step, sigma, size, imax):
     return Image.fromarray(np.uint8(out1)), Image.fromarray(np.uint8(out2))
 
 
-pcs = np.zeros((1, 8, 3), dtype=np.float32)
-pcs[0] = [
-    [0, 0, 0],  # Black
-    [255, 0, 0],  # Red
-    [0, 255, 0],  # Green
-    [0, 0, 255],  # Blue
-    [255, 255, 0],  # Yellow
-    [0, 255, 255],  # Cyan
-    [255, 0, 255],  # Magenta
-    [255, 255, 255],  # White
-]
 
-# fm = Image.open('Input/Image/Kodim23.png')
-fm = Image.open("Output/CCM_Process_R.png")
-# g0 = Image.open('Input/Rand/Kodim8.png')
-g0 = f.random_halftone(fm, False, pcs)
+def apply_CFA():
+    pcs = np.zeros((1, 8, 3), dtype=np.float32)
+    pcs[0] = [
+        [0, 0, 0],  # Black
+        [255, 0, 0],  # Red
+        [0, 255, 0],  # Green
+        [0, 0, 255],  # Blue
+        [255, 255, 0],  # Yellow
+        [0, 255, 255],  # Cyan
+        [255, 0, 255],  # Magenta
+        [255, 255, 255],  # White
+    ]
 
-step = 16
-# img = f.block_DBS_homo_random_p(fm, g0, 1, 1)
-fr, fg, fb = fm.split()
-gr, gg, gb = g0.split()
-start = time.time()
-# r, c1 = RTBDBS(fr, gr, 1, 13, 1)
-# g, c2 = RTBDBS(fg, gg, 1, 13, 1)
-# b, c3 = RTBDBS(fb, gb, 1, 13, 1)
-# img = RTBCDBS_20x20(fm, g0, pcs, 1, 13, 1)
-img, CFA_img = RTBDBS_CFA(fm, g0, step, 1, 13, 20)
-f.time_elapsed(start)
-# img = Image.merge("RGB", (r, g, b))
-bit = 8
-MAX_I = m.pow(2, bit) - 1
-MSE = f.Calculate_MSE(CFA_img, img, 5, 0.9)
-HPSNR = 10 * m.log10(m.pow(MAX_I, 2) / MSE)
-print(HPSNR)
-img.show()
-img.save("Output/CCMR_HT.png")
-CFA_img.show()
-CFA_img.save("Output/CCMR_CFA.png")
+    fm = Image.open("Output/CCM_Process_R.png")
+    g0 = f.random_halftone(fm, False, pcs)
+
+    step = 16
+    fr, fg, fb = fm.split()
+    gr, gg, gb = g0.split()
+    start = time.time()
+    img, CFA_img = RTBDBS_CFA(fm, g0, step, 1, 13, 20)
+    f.time_elapsed(start)
+    bit = 8
+    MAX_I = m.pow(2, bit) - 1
+    MSE = f.Calculate_MSE(CFA_img, img, 5, 0.9)
+    HPSNR = 10 * m.log10(m.pow(MAX_I, 2) / MSE)
+    print(HPSNR)
+    img.show()
+    img.save("Output/CCMR_HT.png")
+    CFA_img.show()
+    CFA_img.save("Output/CCMR_CFA.png")
+
+def RTBDBS_CFA(fm, gm, step, sigma, size, imax):
+    # Implementation of RTBDBS_CFA function goes here
+
+# process_image()
