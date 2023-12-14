@@ -1,0 +1,26 @@
+# Ignore the images files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.tif
+*.tiff
+*.bmp
+*.ppm
+*.pgm
+*.pbm
+*.pnm
+*.svg
+*.eps
+*.fig
+*.psd
+*.raw
+*.pct
+*.xcf
+*.ai
+
+# Ignore the Input/ and Output/ folders
+Input/
+Output/
+__pychache__
+
