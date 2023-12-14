@@ -1,0 +1,5 @@
+0. Resize the image 
+1. CCM process with 34 without 34
+2. HDR (only lab) (with or without)
+3. CFA pattern
+4. to grayscale
